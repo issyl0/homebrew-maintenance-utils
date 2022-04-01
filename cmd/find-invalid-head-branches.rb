@@ -31,8 +31,10 @@ module Homebrew
       odebug "Scanning #{formula.name}..."
       user, repo = parse_repo_url(formula.head.url)
       next if user == "github" # My access token can't access even public `github` org repos without SSO.
+
       remote_default_branch = GitHub.repository(user, repo)["default_branch"]
       next if formula_head_branch == remote_default_branch
+
       # A branch is still valid if it exists on the repo but is not the default.
       next if GitHub.branch_exists?(user, repo, formula_head_branch)
 
