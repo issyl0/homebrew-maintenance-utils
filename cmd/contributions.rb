@@ -16,11 +16,11 @@ module Homebrew
       flag "--email",
         description: "A user's email address that they commit with (useful if not public on GitHub)."
 
-      flag "--before=",
-        description: "Date (ISO-8601 format) to search contributions prior to a date."
+      flag "--from=",
+        description: "Date (ISO-8601 format) to start searching contributions."
 
-      flag "--after=",
-        description: "Date (ISO-8601 format) to search contributions after a date."
+      flag "--to=",
+        description: "Date (ISO-8601 format) to stop searching contributions."
 
       flag "--repo=",
         description: "The Homebrew repository to search for contributions in (brew, core, cask, bundle, ...)."
@@ -39,16 +39,16 @@ module Homebrew
       return
     end
 
-    if args[:before] && args[:after]
-      commits = `git -C #{repo_location} log --oneline --author=#{args[:username] || args[:email]} --before=#{args[:before]} --after=#{args[:after]} | wc -l`.strip.to_i
-      coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" --before=#{args[:before]} --after=#{args[:after]} | grep #{args[:username] || args[:email]} | wc -l`.strip.to_i
+    if args[:from] && args[:to]
+      commits = `git -C #{repo_location} log --oneline --author=#{args[:username] || args[:email]} --before=#{args[:to]} --after=#{args[:from]} | wc -l`.strip.to_i
+      coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" --before=#{args[:to]} --after=#{args[:from]} | grep #{args[:username] || args[:email]} | wc -l`.strip.to_i
     else
       commits = `git -C #{repo_location} log --oneline --author=#{args[:username] || args[:email]}  | wc -l`.strip.to_i
       coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" | grep #{args[:username] || args[:email]} | wc -l`.strip.to_i
     end
 
     sentence = "Person #{args[:username] || args[:email]} directly authored #{commits} commits and co-authored #{coauthorships} commits to #{args[:repo]}"
-    sentence += args[:before] && args[:after] ? " between #{args[:after]} and #{args[:before]}." : " in all time."
+    sentence += args[:from] && args[:to] ? " between #{args[:from]} and #{args[:to]}." : " in all time."
 
     puts sentence
   end
