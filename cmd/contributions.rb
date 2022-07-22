@@ -14,7 +14,7 @@ module Homebrew
         description: "The GitHub username of the user whose contributions you want to find."
 
       flag "--email",
-        description: "The user's primary email address that they commit with (useful if not public on GitHub)."
+        description: "A user's email address that they commit with (useful if not public on GitHub)."
 
       flag "--before=",
         description: "Date (ISO-8601 format) to search contributions prior to a date."
@@ -31,6 +31,7 @@ module Homebrew
       switch "--only-coauthorship",
         description: "Only count commits that the user co-authored."
 
+      conflicts "--username", "--email"
       named_args max: 0
     end
   end
@@ -44,10 +45,10 @@ module Homebrew
       return
     end
 
-    commits = `git -C #{repo_location} log --oneline --author=#{args[:username]}  | wc -l`.strip.to_i
-    coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" | grep #{args[:username]} | wc -l`.strip.to_i
+    commits = `git -C #{repo_location} log --oneline --author=#{args[:username] || args[:email]}  | wc -l`.strip.to_i
+    coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" | grep #{args[:username] || args[:email]} | wc -l`.strip.to_i
 
-    puts "GitHub user #{args[:username]} directly authored #{commits} commits and co-authored #{coauthorships} commits to #{args[:repo]} in all time."
+    puts "Person #{args[:username] || args[:email]} directly authored #{commits} commits and co-authored #{coauthorships} commits to #{args[:repo]} in all time."
   end
 
   def find_repo_path_for_repo(repo)
