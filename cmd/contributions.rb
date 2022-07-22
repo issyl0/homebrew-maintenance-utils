@@ -25,12 +25,6 @@ module Homebrew
       flag "--repo=",
         description: "The Homebrew repository to search for contributions in (brew, core, cask, bundle, ...)."
 
-      switch "--only-direct-authorship",
-        description: "Only count commits that the user directly authored."
-
-      switch "--only-coauthorship",
-        description: "Only count commits that the user co-authored."
-
       conflicts "--username", "--email"
       named_args max: 0
     end
