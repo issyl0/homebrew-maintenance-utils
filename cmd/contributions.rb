@@ -39,10 +39,18 @@ module Homebrew
       return
     end
 
-    commits = `git -C #{repo_location} log --oneline --author=#{args[:username] || args[:email]}  | wc -l`.strip.to_i
-    coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" | grep #{args[:username] || args[:email]} | wc -l`.strip.to_i
+    if args[:before] && args[:after]
+      commits = `git -C #{repo_location} log --oneline --author=#{args[:username] || args[:email]} --before=#{args[:before]} --after=#{args[:after]} | wc -l`.strip.to_i
+      coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" --before=#{args[:before]} --after=#{args[:after]} | grep #{args[:username] || args[:email]} | wc -l`.strip.to_i
+    else
+      commits = `git -C #{repo_location} log --oneline --author=#{args[:username] || args[:email]}  | wc -l`.strip.to_i
+      coauthorships = `git -C #{repo_location} log --oneline --format="%(trailers:key=Co-authored-by:)" | grep #{args[:username] || args[:email]} | wc -l`.strip.to_i
+    end
 
-    puts "Person #{args[:username] || args[:email]} directly authored #{commits} commits and co-authored #{coauthorships} commits to #{args[:repo]} in all time."
+    sentence = "Person #{args[:username] || args[:email]} directly authored #{commits} commits and co-authored #{coauthorships} commits to #{args[:repo]}"
+    sentence += args[:before] && args[:after] ? " between #{args[:after]} and #{args[:before]}." : " in all time."
+
+    puts sentence
   end
 
   def find_repo_path_for_repo(repo)
