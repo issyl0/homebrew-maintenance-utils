@@ -9,6 +9,7 @@ module Homebrew
     Homebrew::CLI::Parser.new do
       usage_banner <<~EOS
         `contributions`
+
         Contributions to Homebrew repos for a user.
       EOS
 
@@ -41,7 +42,7 @@ module Homebrew
     args[:repos].each do |repo|
       repo_location = find_repo_path_for_repo(repo)
       unless repo_location
-        ofail "Couldn't find location for #{repo}. Is there a typo? We only support #{SUPPORTED_REPOS.join(", ")} repos so far."
+        ofail "Couldn't find location for #{repo}. Do you have it tapped, or is there a typo? We only support #{SUPPORTED_REPOS.join(", ")} repos so far."
         return
       end
 
