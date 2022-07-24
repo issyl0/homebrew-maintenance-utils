@@ -3,6 +3,8 @@
 module Homebrew
   module_function
 
+  SUPPORTED_REPOS = %w[brew core cask bundle].freeze
+
   def contributions_args
     Homebrew::CLI::Parser.new do
       usage_banner <<~EOS
@@ -20,7 +22,7 @@ module Homebrew
         description: "Date (ISO-8601 format) to stop searching contributions."
 
       comma_array "--repos=",
-        description: "The Homebrew repositories to search for contributions in. Comma separated. Supported repos: brew, core, cask, bundle."
+        description: "The Homebrew repositories to search for contributions in. Comma separated. Supported repos: #{SUPPORTED_REPOS.join(", ")}."
 
       named_args :none
     end
@@ -39,7 +41,7 @@ module Homebrew
     args[:repos].each do |repo|
       repo_location = find_repo_path_for_repo(repo)
       unless repo_location
-        ofail "Couldn't find location for #{repo}. Is there a typo? We only support brew, core, cask, and bundle repos so far."
+        ofail "Couldn't find location for #{repo}. Is there a typo? We only support #{SUPPORTED_REPOS.join(", ")} repos so far."
         return
       end
 
