@@ -10,10 +10,7 @@ module Homebrew
         Contributions to Homebrew repos for a user.
       EOS
 
-      flag "--username=",
-        description: "The GitHub username of the user whose contributions you want to find."
-
-      flag "--email",
+      flag "--email=",
         description: "A user's email address that they commit with."
 
       flag "--from=",
@@ -25,8 +22,6 @@ module Homebrew
       comma_array "--repos=",
         description: "The Homebrew repositories to search for contributions in. Comma separated. Supported repos: brew, core, cask, bundle."
 
-      conflicts "--username", "--email"
-
       named_args :none
     end
   end
@@ -34,8 +29,8 @@ module Homebrew
   def contributions
     args = contributions_args.parse
 
-    if !args[:repos] && (args[:username] || args[:email])
-      ofail "`--repos` and one of `--username` or `--email` are required."
+    if !args[:repos] && args[:email]
+      ofail "`--repos` and `--email` are required."
       return
     end
 
@@ -52,7 +47,7 @@ module Homebrew
       coauthorships[repo] = git_log_cmd("coauthorships", repo_location, args)
     end
 
-    sentence = "Person #{args[:username] || args[:email]} directly authored #{commits.values.sum} commits and co-authored #{coauthorships.values.sum} commits to #{args[:repos].join(", ")}"
+    sentence = "Person #{args[:email]} directly authored #{commits.values.sum} commits and co-authored #{coauthorships.values.sum} commits to #{args[:repos].join(", ")}"
     sentence += if args[:from] && args[:to]
       " between #{args[:from]} and #{args[:to]}"
     elsif args[:from]
@@ -82,11 +77,11 @@ module Homebrew
 
   def git_log_cmd(kind, repo_location, args)
     cmd = "git -C #{repo_location} log --oneline"
-    cmd += " --author=#{args[:username] || args[:email]}" if kind == "author"
+    cmd += " --author=#{args[:email]}" if kind == "author"
     cmd += " --format='%(trailers:key=Co-authored-by:)'" if kind == "coauthorships"
     cmd += " --before=#{args[:to]}" if args[:to]
     cmd += " --after=#{args[:from]}" if args[:from]
-    cmd += " | grep #{args[:username] || args[:email]}" if kind == "coauthorships"
+    cmd += " | grep #{args[:email]}" if kind == "coauthorships"
 
     `#{cmd} | wc -l`.strip.to_i
   end
