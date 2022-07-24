@@ -53,7 +53,16 @@ module Homebrew
     end
 
     sentence = "Person #{args[:username] || args[:email]} directly authored #{commits.values.sum} commits and co-authored #{coauthorships.values.sum} commits to #{args[:repos].join(", ")}"
-    sentence += args[:from] && args[:to] ? " between #{args[:from]} and #{args[:to]}." : " in all time."
+    sentence += if args[:from] && args[:to]
+      " between #{args[:from]} and #{args[:to]}"
+    elsif args[:from]
+      " after #{args[:from]}"
+    elsif args[:to]
+      " before #{args[:to]}"
+    else
+      " in all time"
+    end
+    sentence += "."
 
     puts sentence
   end
@@ -75,7 +84,8 @@ module Homebrew
     cmd = "git -C #{repo_location} log --oneline"
     cmd += " --author=#{args[:username] || args[:email]}" if kind == "author"
     cmd += " --format='%(trailers:key=Co-authored-by:)'" if kind == "coauthorships"
-    cmd += " --before=#{args[:to]} --after=#{args[:from]}" if args[:from] && args[:to]
+    cmd += " --before=#{args[:to]}" if args[:to]
+    cmd += " --after=#{args[:from]}" if args[:from]
     cmd += " | grep #{args[:username] || args[:email]}" if kind == "coauthorships"
 
     `#{cmd} | wc -l`.strip.to_i
