@@ -22,8 +22,8 @@ module Homebrew
       flag "--to=",
         description: "Date (ISO-8601 format) to stop searching contributions."
 
-      flag "--repo=",
-        description: "The Homebrew repository to search for contributions in (brew, core, cask, bundle, ...)."
+      comma_array "--repos=",
+        description: "The Homebrew repositories to search for contributions in. Comma separated. Supported repos: brew, core, cask, bundle."
 
       conflicts "--username", "--email"
 
@@ -34,21 +34,25 @@ module Homebrew
   def contributions
     args = contributions_args.parse
 
-    if !args[:repo] && (args[:username] || args[:email])
-      ofail "`--repo` and one of `--username` or `--email` are required."
+    if !args[:repos] && (args[:username] || args[:email])
+      ofail "`--repos` and one of `--username` or `--email` are required."
       return
     end
 
-    repo_location = find_repo_path_for_repo(args[:repo])
-    unless repo_location
-      ofail "Couldn't find location for #{args[:repo]}. Is there a typo? We only support brew, core, cask, and bundle repos so far."
-      return
+    commits, coauthorships = {}, {}
+
+    args[:repos].each do |repo|
+      repo_location = find_repo_path_for_repo(repo)
+      unless repo_location
+        ofail "Couldn't find location for #{repo}. Is there a typo? We only support brew, core, cask, and bundle repos so far."
+        return
+      end
+
+      commits[repo] = git_log_cmd("author", repo_location, args)
+      coauthorships[repo] = git_log_cmd("coauthorships", repo_location, args)
     end
 
-    commits = git_log_cmd("author", repo_location, args)
-    coauthorships = git_log_cmd("coauthorships", repo_location, args)
-
-    sentence = "Person #{args[:username] || args[:email]} directly authored #{commits} commits and co-authored #{coauthorships} commits to #{args[:repo]}"
+    sentence = "Person #{args[:username] || args[:email]} directly authored #{commits.values.sum} commits and co-authored #{coauthorships.values.sum} commits to #{args[:repos].join(", ")}"
     sentence += args[:from] && args[:to] ? " between #{args[:from]} and #{args[:to]}." : " in all time."
 
     puts sentence
