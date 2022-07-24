@@ -14,16 +14,17 @@ module Homebrew
       EOS
 
       flag "--email=",
-        description: "A user's email address that they commit with."
+           description: "A user's email address that they commit with."
 
       flag "--from=",
-        description: "Date (ISO-8601 format) to start searching contributions."
+           description: "Date (ISO-8601 format) to start searching contributions."
 
       flag "--to=",
-        description: "Date (ISO-8601 format) to stop searching contributions."
+           description: "Date (ISO-8601 format) to stop searching contributions."
 
       comma_array "--repos=",
-        description: "The Homebrew repositories to search for contributions in. Comma separated. Supported repos: #{SUPPORTED_REPOS.join(", ")}."
+                  description: "The Homebrew repositories to search for contributions in. " \
+                               "Comma separated. Supported repos: #{SUPPORTED_REPOS.join(", ")}."
 
       named_args :none
     end
@@ -32,25 +33,25 @@ module Homebrew
   def contributions
     args = contributions_args.parse
 
-    if !args[:repos] && args[:email]
-      ofail "`--repos` and `--email` are required."
-      return
-    end
+    return ofail "`--repos` and `--email` are required." if !args[:repos] && !args[:email]
 
-    commits, coauthorships = {}, {}
+    commits = 0
+    coauthorships = 0
 
     args[:repos].each do |repo|
       repo_location = find_repo_path_for_repo(repo)
       unless repo_location
-        ofail "Couldn't find location for #{repo}. Do you have it tapped, or is there a typo? We only support #{SUPPORTED_REPOS.join(", ")} repos so far."
-        return
+        return ofail "Couldn't find location for #{repo}. Do you have it tapped, or is there a typo? " \
+                     "We only support #{SUPPORTED_REPOS.join(", ")} repos so far."
       end
 
-      commits[repo] = git_log_cmd("author", repo_location, args)
-      coauthorships[repo] = git_log_cmd("coauthorships", repo_location, args)
+      commits += git_log_cmd("author", repo_location, args)
+      coauthorships += git_log_cmd("coauthorships", repo_location, args)
     end
 
-    sentence = "Person #{args[:email]} directly authored #{commits.values.sum} commits and co-authored #{coauthorships.values.sum} commits to #{args[:repos].join(", ")}"
+    sentence = "Person #{args[:email]} directly authored #{commits} commits"
+    sentence += " and co-authored #{coauthorships} commits"
+    sentence += " to #{args[:repos].join(", ")}"
     sentence += if args[:from] && args[:to]
       " between #{args[:from]} and #{args[:to]}"
     elsif args[:from]
